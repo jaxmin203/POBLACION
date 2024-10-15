@@ -1,0 +1,72 @@
+% Interpolación de la Población de Bolivia
+% Métodos de Newton y Lagrange
+
+% Datos de población de Bolivia (en millones de habitantes)
+anios = [1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020]; % Años disponibles
+poblacion = [2.704, 3.663, 4.857, 5.996, 7.089, 8.274, 9.947, 11.673]; % Población en millones
+
+% Año a estimar
+anio_estimado = 2024;
+
+% --------------------------
+% Método de Interpolación de Newton
+% --------------------------
+n = length(anios);
+D = zeros(n, n); % Matriz de diferencias divididas
+
+% Rellenar la primera columna con los valores de la población
+D(:,1) = poblacion';
+
+% Cálculo de las diferencias divididas
+for j = 2:n
+    for i = j:n
+        D(i,j) = (D(i,j-1) - D(i-1,j-1)) / (anios(i) - anios(i-j+1));
+    end
+end
+
+% Cálculo del polinomio de Newton
+p_newton = D(n,n);
+for i = n-1:-1:1
+    p_newton = p_newton * (anio_estimado - anios(i)) + D(i,i);
+end
+
+% --------------------------
+% Método de Interpolación de Lagrange
+% --------------------------
+p_lagrange = 0; % Inicializar el polinomio de Lagrange
+for i = 1:n
+    Li = 1; % Producto para cada Li
+    for j = 1:n
+        if i ~= j
+            Li = Li * (anio_estimado - anios(j)) / (anios(i) - anios(j));
+        end
+    end
+    p_lagrange = p_lagrange + Li * poblacion(i);
+end
+
+% --------------------------
+% Comparación con el INE y resultado
+% --------------------------
+poblacion_ine = 12.4; % Valor estimado por el INE para 2024
+
+% Cálculo de errores
+error_newton = abs((p_newton - poblacion_ine) / poblacion_ine) * 100;
+error_lagrange = abs((p_lagrange - poblacion_ine) / poblacion_ine) * 100;
+
+% Mostrar resultados
+fprintf('Población estimada en 2024 (Newton): %.4f millones\n', p_newton);
+fprintf('Error respecto al INE (Newton): %.2f%%\n', error_newton);
+fprintf('Población estimada en 2024 (Lagrange): %.4f millones\n', p_lagrange);
+fprintf('Error respecto al INE (Lagrange): %.2f%%\n', error_lagrange);
+
+% Gráfica de los datos y resultados
+figure;
+plot(anios, poblacion, 'bo-', 'LineWidth', 1.5);
+hold on;
+plot(anio_estimado, p_newton, 'rs', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
+plot(anio_estimado, p_lagrange, 'gs', 'MarkerSize', 10, 'MarkerFaceColor', 'g');
+legend('Datos originales', 'Estimación Newton', 'Estimación Lagrange', 'Location', 'NorthWest');
+xlabel('Año');
+ylabel('Población (millones)');
+title('Interpolación de la Población de Bolivia para el año 2024');
+grid on;
